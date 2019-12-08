@@ -2,7 +2,7 @@ mod file_fold;
 mod fuel_counter_upper;
 
 fn main() {
-    let result = file_fold::fold("input.txt",0,&fuel_counter_upper::sum_fuel_required);
+    let result = file_fold::fold("input.txt",0,&fuel_counter_upper::sum_fuel_required_including_fuel_for_fuel);
     match result {
         Ok(r) => println!("{}", r),
         Err(e) => println!("{}", e.to_string())
