@@ -3,10 +3,10 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
 
-fn file_fold<A>(filepath : &str, initial : A, op : &dyn Fn(A, &str) -> A) -> io::Result<A> {
+pub fn fold<A>(filepath: &str, initial: A, op: &dyn Fn(A, &str) -> A) -> io::Result<A> {
     let mut current: A = initial;
-    let mut f = File::open(filepath)?;
-    let mut reader = BufReader::new(f);
+    let f = File::open(filepath)?;
+    let reader = BufReader::new(f);
     for line in reader.lines() {
         current = op(current, line?.as_str());
     }
@@ -16,17 +16,22 @@ fn file_fold<A>(filepath : &str, initial : A, op : &dyn Fn(A, &str) -> A) -> io:
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn concat(a : &str, b : &str) -> &str {
-        a + b
+
+    fn concat(a: String, b: &str) -> String {
+        let mut s = String::new();
+        s.push_str(a.as_str());
+        s.push_str(b);
+        s
     }
 
     #[test]
     fn test_filefold() {
-        let result = file_fold("inputtest.txt","", &concat);
+        let result = fold("inputtest1.txt", String::new(), &concat);
         assert!(result.is_ok());
         match result {
             Ok(r) => assert_eq!(r, "abcdef"),
-            Err(e) => assert!(false)
+            Err(_) => assert!(false)
         };
     }
 }
+
