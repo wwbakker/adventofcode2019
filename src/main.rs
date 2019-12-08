@@ -2,8 +2,10 @@ extern crate clap;
 
 mod advent01;
 mod advent02;
+mod advent03;
 use advent01::start01;
 use advent02::start02;
+use advent03::start03;
 use clap::{Arg, App, ArgMatches};
 
 fn main() {
@@ -18,6 +20,7 @@ fn main() {
             .possible_value("1b")
             .possible_value("2a")
             .possible_value("2b")
+            .possible_value("3a")
             .required(true)
         );
    let matches: ArgMatches = command_line_information.get_matches();
@@ -28,6 +31,7 @@ fn main() {
         Some("1b") => start01::start_b(),
         Some("2a") => start02::start_a(),
         Some("2b") => start02::start_b(),
+        Some("3a") => start03::start_a(),
         Some(invalid_input) => eprintln!("'{}' is not a valid solution", invalid_input),
         None => eprintln!("missing arguments")
     }
