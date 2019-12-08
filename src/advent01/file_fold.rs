@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn test_filefold() {
-        let result = fold("inputtest1.txt", String::new(), &concat);
+        let result = fold("input/advent01/inputtest1.txt", String::new(), &concat);
         assert!(result.is_ok());
         match result {
             Ok(r) => assert_eq!(r, "abcdef"),
