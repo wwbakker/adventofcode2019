@@ -3,26 +3,4 @@
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" default="true">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
-  <component name="SbtLocalSettings">
-    <option name="modificationStamps">
-      <map>
-        <entry key="$USER_HOME$/Documents/ScalaIDEWorkspace/kvstore" value="1431974147991" />
-        <entry key="$USER_HOME$/Documents/ScalaIDEWorkspace/suggestions" value="1431590791746" />
-        <entry key="G:/repos/codestars/haas" value="1470468617058" />
-      </map>
-    </option>
-    <option name="projectSyncType">
-      <map>
-        <entry key="$PROJECT_DIR$/../../cats-sandbox" value="PREVIEW" />
-        <entry key="$PROJECT_DIR$/../../contentaggregator/lean_functional_app" value="PREVIEW" />
-        <entry key="$PROJECT_DIR$/../../elastic-search-domain-aws-deployment" value="PREVIEW" />
-        <entry key="$PROJECT_DIR$/../../sbt-deploy-static-website-to-s3" value="PREVIEW" />
-        <entry key="$PROJECT_DIR$/../../sbt-plugin-yaml-to-json" value="PREVIEW" />
-        <entry key="$PROJECT_DIR$/../../scala-with-cats-sandbox-2" value="PREVIEW" />
-      </map>
-    </option>
-  </component>
-  <component name="ScalaSbtSettings">
-    <option name="customVMPath" />
-  </component>
 </project>

@@ -1,5 +1,14 @@
 use crate::advent02::intcode::Operation::{Addition, Multiplication, Halt};
 
+pub fn exec_with_noun_and_verb(code: &Vec<i32>, noun : i32, verb : i32) -> i32 {
+    let mut cloned_code = code.clone();
+    cloned_code[1] = noun;
+    cloned_code[2] = verb;
+    exec(cloned_code.as_mut());
+    cloned_code[0]
+}
+
+
 pub fn exec(code: &mut Vec<i32>) {
     let mut program_counter: i32 = 0;
     let mut next_program_action = NextProgramAction::Continue;
