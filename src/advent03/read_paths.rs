@@ -1,9 +1,17 @@
-use std::fs::read_to_string;
+use std::fs::File;
 use std::io;
+use std::io::{BufReader, BufRead};
+use crate::advent03::model::{Path, Direction};
 
 
-pub fn read(filepath: &str) -> io::Result<Vec<Direction>> {
-    read_to_string(filepath).map(|a| a.split(",").map(read_direction).collect())
+pub fn read(filepath: &str) -> io::Result<Vec<Path>> {
+    let f = File::open(filepath)?;
+    let reader = BufReader::new(f);
+    reader.lines().map(|s| s.map(read_path)).collect()
+}
+
+fn read_path(s : String) -> Path {
+    Path { directions: s.split(",").map(read_direction).collect() }
 }
 
 fn read_direction(s : &str) -> Direction {
@@ -18,13 +26,6 @@ fn read_direction(s : &str) -> Direction {
     }
 }
 
-#[derive(PartialEq,Debug,Clone)]
-pub enum Direction {
-    Left(i32),
-    Right(i32),
-    Up(i32),
-    Down(i32)
-}
 
 #[cfg(test)]
 mod tests {
@@ -34,7 +35,10 @@ mod tests {
     #[test]
     fn test_read_directions() {
         match read("input/advent03/inputtest1.txt") {
-            Ok(r) => assert_eq!(r, vec!(Up(7),Right(6),Down(4),Left(4))),
+            Ok(r) => {
+                assert_eq!(r[0].directions, vec!(Up(7),Right(6),Down(4),Left(4)));
+                assert_eq!(r[1].directions, vec!(Up(5)))
+            },
             Err(_) => assert!(false)
         }
     }
