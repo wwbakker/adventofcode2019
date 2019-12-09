@@ -1,3 +1,6 @@
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
+
 pub struct Path {
     pub(crate) directions: Vec<Direction>
 }
@@ -19,5 +22,11 @@ pub struct Location {
 impl Location {
     pub fn manhattan_distance(&self) -> i32 {
         self.x.abs() + self.y.abs()
+    }
+
+    pub fn calculate_hash(&self) -> u64 {
+        let mut s = DefaultHasher::new();
+        self.hash(&mut s);
+        s.finish()
     }
 }
