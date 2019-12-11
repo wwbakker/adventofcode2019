@@ -1,5 +1,3 @@
-use std::io;
-
 #[derive(PartialEq,Debug,Clone)]
 pub(crate) enum ParameterMode {
     Immediate,
@@ -51,12 +49,14 @@ pub(crate) enum Operation {
     Multiplication { value_1: Value, value_2: Value, result: Value },
     Input { destination : Value },
     Output { source : Value },
+    JumpIfTrue { value : Value, jump_address: Value },
+    JumpIfFalse { value : Value, jump_address: Value },
+    LessThan { value_1: Value, value_2: Value, result: Value },
+    Equals { value_1: Value, value_2: Value, result: Value },
     Halt,
 }
 
-
 impl Operation {
-
 
     fn parameters_per_opcode(opcode : i32) -> i32 {
         match opcode {
@@ -64,6 +64,10 @@ impl Operation {
             2 => 3,
             3 => 1,
             4 => 1,
+            5 => 2,
+            6 => 2,
+            7 => 3,
+            8 => 3,
             99 => 0,
             _ => panic!("unknown upcode")
         }
@@ -88,19 +92,7 @@ impl Operation {
         (opcode, parameter_modes)
     }
 
-    fn read_int_from_command_line() -> i32 {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let number: Result<i32,_> = input.trim().parse();
-        match number {
-            Ok(i) => i,
-            Err(e) => {
-                eprintln!("Could not parse '{}'. Please input an integer, try again ({})", input, e.to_string());
-                Self::read_int_from_command_line()
-            }
-        }
 
-    }
 
     pub(crate) fn parse_at_program_counter(code: &Vec<i32>, program_counter: i32) -> Operation {
         let pcu: usize = program_counter as usize;
@@ -122,30 +114,76 @@ impl Operation {
             4 => Operation::Output {
                 source: Value::create( code[pcu + 1], &parameter_modes[0])
             },
+            5 => Operation::JumpIfTrue {
+                value: Value::create( code[pcu + 1], &parameter_modes[0]),
+                jump_address: Value::create( code[pcu + 2], &parameter_modes[1])
+            },
+            6 => Operation::JumpIfFalse {
+                value: Value::create( code[pcu + 1], &parameter_modes[0]),
+                jump_address: Value::create( code[pcu + 2], &parameter_modes[1])
+            },
+            7 => Operation::LessThan {
+                value_1: Value::create(code[pcu + 1], &parameter_modes[0]),
+                value_2: Value::create(code[pcu + 2], &parameter_modes[1]),
+                result: Value::create(code[pcu + 3], &parameter_modes[2]),
+            },
+            8 => Operation::Equals {
+                value_1: Value::create(code[pcu + 1], &parameter_modes[0]),
+                value_2: Value::create(code[pcu + 2], &parameter_modes[1]),
+                result: Value::create(code[pcu + 3], &parameter_modes[2]),
+            },
             99 => Operation::Halt,
             _ => panic!("unknown opcode")
         }
     }
 
-    pub(crate) fn execute(&self, code: &mut Vec<i32>) -> (NextProgramAction, i32) {
+    pub(crate) fn execute(&self,
+                          code: &mut Vec<i32>,
+                          pcu : i32,
+                          read_int_function: &dyn Fn() -> i32,
+                          output_function: &dyn Fn(i32) -> ()) -> (NextProgramAction, i32) {
         match self {
             Operation::Addition { value_1, value_2, result } => {
                 result.write(code, value_1.read(code) + value_2.read(code));
-                (NextProgramAction::Continue, 4)
+                (NextProgramAction::Continue, pcu + 4)
             },
             Operation::Multiplication { value_1, value_2, result } => {
                 result.write(code, value_1.read(code) * value_2.read(code));
-                (NextProgramAction::Continue, 4)
+                (NextProgramAction::Continue, pcu + 4)
             },
             Operation::Input { destination} => {
                 println!("Please input a number.");
-                destination.write(code, Self::read_int_from_command_line());
-                (NextProgramAction::Continue, 2)
+                destination.write(code, read_int_function());
+                (NextProgramAction::Continue, pcu + 2)
             },
             Operation::Output { source} => {
-                println!("output: {}", source.read(code));
-                (NextProgramAction::Continue, 2)
+                output_function(source.read(code));
+                (NextProgramAction::Continue, pcu + 2)
             },
+            Operation::JumpIfTrue { value, jump_address} => {
+                let next_instruction : i32 =
+                    if value.read(code) != 0
+                        { jump_address.read(code) }
+                    else
+                        { pcu + 4 };
+                (NextProgramAction::Continue, next_instruction)
+            },
+            Operation::JumpIfFalse { value, jump_address} => {
+                let next_instruction : i32 =
+                    if value.read(code) == 0
+                    { jump_address.read(code) }
+                    else
+                    { pcu + 4 };
+                (NextProgramAction::Continue, next_instruction)
+            },
+            Operation::LessThan { value_1, value_2, result} => {
+                result.write(code, if value_1.read(code) < value_2.read(code) {1} else {0} );
+                (NextProgramAction::Continue, pcu + 4)
+            }
+            Operation::Equals { value_1, value_2, result} => {
+                result.write(code, if value_1.read(code) == value_2.read(code) {1} else {0} );
+                (NextProgramAction::Continue, pcu + 4)
+            }
             Operation::Halt => (NextProgramAction::Halt, 1)
         }
     }
@@ -162,7 +200,6 @@ mod tests {
         assert_eq!(opcode, 2);
         assert_eq!(parameter_modes, vec!(ParameterMode::Position, ParameterMode::Immediate, ParameterMode::Position));
     }
-
 }
 
 
