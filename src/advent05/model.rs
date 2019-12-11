@@ -141,7 +141,7 @@ impl Operation {
                           code: &mut Vec<i32>,
                           pcu : i32,
                           read_int_function: &dyn Fn() -> i32,
-                          output_function: &dyn Fn(i32) -> ()) -> (NextProgramAction, i32) {
+                          output_function: &mut dyn FnMut(i32) -> ()) -> (NextProgramAction, i32) {
         match self {
             Operation::Addition { value_1, value_2, result } => {
                 result.write(code, value_1.read(code) + value_2.read(code));

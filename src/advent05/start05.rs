@@ -1,12 +1,13 @@
 use super::read_ints;
 use super::intcode;
 use std::io;
+use std::borrow::BorrowMut;
 
 pub fn start_a() {
     match read_ints::read("input/advent05/input.txt") {
         Ok(mut v) => {
             let code = v.as_mut();
-            intcode::exec(code, &read_int_from_command_line, &print_output_to_command_line);
+            intcode::exec(code, &read_int_from_command_line, print_output_to_command_line.borrow_mut());
             println!("Successfully executed intcode");
             println!("{:?}", code)
 
