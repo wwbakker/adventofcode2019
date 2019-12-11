@@ -80,7 +80,7 @@ mod tests {
         let mut immutable_code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
         let code = immutable_code.as_mut();
         let expected_result : Vec<i32> = vec!(1, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
-        let first_command_result: NextProgramAction =
+//        let first_command_result: NextProgramAction =
             parse_and_execute_single_operation(code, 0);
         assert_eq!(code, &expected_result)
     }

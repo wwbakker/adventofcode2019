@@ -97,7 +97,7 @@ mod tests {
         let expected_result : HashSet<Location> =
             HashSet::from_iter(expected_locations.iter().map(|a| *a));
 
-        let (locations, number_of_steps_per_location) = draw_path(&p);
+        let (locations, _) = draw_path(&p);
         assert_eq!(locations, expected_result)
     }
 }
