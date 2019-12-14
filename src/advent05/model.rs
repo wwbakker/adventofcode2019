@@ -152,7 +152,6 @@ impl Operation {
                 (NextProgramAction::Continue, pcu + 4)
             },
             Operation::Input { destination} => {
-                println!("Please input a number.");
                 destination.write(code, read_int_function());
                 (NextProgramAction::Continue, pcu + 2)
             },
@@ -165,7 +164,7 @@ impl Operation {
                     if value.read(code) != 0
                         { jump_address.read(code) }
                     else
-                        { pcu + 4 };
+                        { pcu + 3 };
                 (NextProgramAction::Continue, next_instruction)
             },
             Operation::JumpIfFalse { value, jump_address} => {
@@ -173,7 +172,7 @@ impl Operation {
                     if value.read(code) == 0
                     { jump_address.read(code) }
                     else
-                    { pcu + 4 };
+                    { pcu + 3 };
                 (NextProgramAction::Continue, next_instruction)
             },
             Operation::LessThan { value_1, value_2, result} => {

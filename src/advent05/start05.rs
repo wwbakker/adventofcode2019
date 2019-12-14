@@ -17,6 +17,7 @@ pub fn start_a() {
 }
 
 fn read_int_from_command_line() -> i32 {
+    println!("Please input a number.");
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
     let number: Result<i32,_> = input.trim().parse();

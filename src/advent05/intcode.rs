@@ -29,40 +29,112 @@ mod tests {
     use std::borrow::BorrowMut;
 
     fn empty_test_input_fn() -> i32 { 0 }
-    fn empty_test_output_fn(_ : i32) -> () { }
+
+    fn empty_test_output_fn(_: i32) -> () {}
+
+    fn input_of(i: i32) -> impl Fn() -> i32 { move || i }
+//    fn output_of(output: &mut i32) -> impl Fn(i32) -> () { move |o| *output = o }
 
     #[test]
     fn test_single_operation() {
-        let mut immutable_code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
-        let code = immutable_code.as_mut();
-        let expected_result : Vec<i32> = vec!(1, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
-//        let (first_command_result, _) =
-            parse_and_execute_single_operation(code, 0, &empty_test_input_fn, empty_test_output_fn.borrow_mut());
-        assert_eq!(code, &expected_result)
+        let mut code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
+        let expected_result: Vec<i32> = vec!(1, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
+        parse_and_execute_single_operation(&mut code, 0, &empty_test_input_fn, empty_test_output_fn.borrow_mut());
+        assert_eq!(&code, &expected_result)
     }
 
     #[test]
     fn test_complete_execution() {
-        let mut immutable_code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
-        let code = immutable_code.as_mut();
+        let mut code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
         let expected_result: Vec<i32> = vec!(3500, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
-        exec(code, &empty_test_input_fn, empty_test_output_fn.borrow_mut());
-        assert_eq!(code, &expected_result)
+        exec(&mut code, &empty_test_input_fn, empty_test_output_fn.borrow_mut());
+        assert_eq!(&code, &expected_result)
     }
 
     #[test]
-    fn test_new_operations() {
-        let mut immutable_code = vec!(3,9,8,9,10,9,4,9,99,-1,8);
-        let code = immutable_code.as_mut();
+    fn test_equal_position_mode() {
+        let mut code = vec!(3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8);
         let mut test_output = 0;
-        let mut of = |v : i32| { test_output = v; ()};
-        let output_fn: &mut dyn FnMut(i32) -> () = of.borrow_mut();
-        let input_7_fn: &dyn Fn() -> i32 = &(|| 7);
-        let input_8_fn: &dyn Fn() -> i32 = &(|| 8);
-
-        exec(code, input_7_fn, output_fn);
+        {
+            let mut write_to_test_output_fn = |v: i32| {
+                test_output = v;
+                ()
+            };
+            exec(&mut code, &input_of(7), write_to_test_output_fn.borrow_mut());
+        }
         assert_eq!(test_output, 0);
-        exec(code, input_8_fn, output_fn);
+        {
+            let mut write_to_test_output_fn = |v: i32| {
+                test_output = v;
+                ()
+            };
+            exec(&mut code, &input_of(8), write_to_test_output_fn.borrow_mut());
+        }
+        assert_eq!(test_output, 1);
+    }
+
+    #[test]
+    fn test_less_than_position_mode() {
+        let mut code = vec!(3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8);
+
+        exec(&mut code, &input_of(7), empty_test_output_fn.borrow_mut());
+        assert_eq!(code[9], 1);
+        exec(&mut code, &input_of(8), empty_test_output_fn.borrow_mut());
+        assert_eq!(code[9], 0);
+    }
+
+    #[test]
+    fn test_equal_immediate_mode() {
+        let mut code = vec!(3, 3, 1108, -1, 8, 3, 4, 3, 99);
+
+        exec(&mut code, &input_of(7), empty_test_output_fn.borrow_mut());
+        assert_eq!(code[3], 0);
+        exec(&mut code, &input_of(8), empty_test_output_fn.borrow_mut());
+        assert_eq!(code[3], 1);
+    }
+
+    #[test]
+    fn test_jump_case_position_mode() {
+        let mut code = vec!(3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9);
+        let mut test_output = 0;
+        {
+            let mut write_to_test_output_fn = |v: i32| {
+                test_output = v;
+                ()
+            };
+            exec(&mut code, &input_of(0), write_to_test_output_fn.borrow_mut());
+        }
+        assert_eq!(test_output, 0);
+        {
+            let mut write_to_test_output_fn = |v: i32| {
+                test_output = v;
+                ()
+            };
+            exec(&mut code, &input_of(-5), write_to_test_output_fn.borrow_mut());
+        }
+        assert_eq!(test_output, 1);
+    }
+
+    #[test]
+    fn test_jump_case_immediate_mode() {
+        let mut test_output = 0;
+        {
+            let mut code = vec!(3,3,1105,-1,9,1101,0,0,12,4,12,99,1);
+            let mut write_to_test_output_fn = |v: i32| {
+                test_output = v;
+                ()
+            };
+            exec(&mut code, &input_of(0), write_to_test_output_fn.borrow_mut());
+        }
+        assert_eq!(test_output, 0);
+        {
+            let mut code = vec!(3,3,1105,-1,9,1101,0,0,12,4,12,99,1);
+            let mut write_to_test_output_fn = |v: i32| {
+                test_output = v;
+                ()
+            };
+            exec(&mut code, &input_of(-5), write_to_test_output_fn.borrow_mut());
+        }
         assert_eq!(test_output, 1);
     }
 }
