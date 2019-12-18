@@ -32,6 +32,7 @@ fn main() {
             .possible_value("4b")
             .possible_value("5a")
             .possible_value("6a")
+            .possible_value("6b")
             .required(true)
         );
    let matches: ArgMatches = command_line_information.get_matches();
@@ -48,6 +49,7 @@ fn main() {
         Some("4b") => start04::start_b(),
         Some("5a") => start05::start_a(),
         Some("6a") => start06::start_a(),
+        Some("6b") => start06::start_b(),
         Some(invalid_input) => eprintln!("'{}' is not a valid solution", invalid_input),
         None => eprintln!("missing arguments")
     }
