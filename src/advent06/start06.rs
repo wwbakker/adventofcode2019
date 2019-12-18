@@ -31,7 +31,7 @@ mod tests {
     fn test_path() {
         let space_objects = read("input/advent06/inputtest2.txt").unwrap();
         let p = path(&space_objects, &String::from("SAN"), &String::from("COM"), false);
-        let mut exp = vec!("SAN", "I", "D", "C", "B", "COM");
+        let exp = vec!("SAN", "I", "D", "C", "B", "COM");
 
         assert_eq!(p, LinkedList::from_iter(exp.iter().map( |s| String::from(*s))))
     }
@@ -40,7 +40,7 @@ mod tests {
     fn test_path_with_transfer() {
         let space_objects = read("input/advent06/inputtest2.txt").unwrap();
         let p = path_with_transfer(&space_objects, &String::from("YOU"), &String::from("SAN"));
-        let mut exp = vec!("K", "J", "E", "D", "I");
+        let exp = vec!("K", "J", "E", "D", "I");
         assert_eq!(p, LinkedList::from_iter(exp.iter().map( |s| String::from(*s))))
     }
 }

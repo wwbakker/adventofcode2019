@@ -6,12 +6,14 @@ mod advent03;
 mod advent04;
 mod advent05;
 mod advent06;
+mod advent07;
 use advent01::start01;
 use advent02::start02;
 use advent03::start03;
 use advent04::start04;
 use advent05::start05;
 use advent06::start06;
+use advent07::start07;
 use clap::{Arg, App, ArgMatches};
 
 fn main() {
@@ -33,6 +35,7 @@ fn main() {
             .possible_value("5a")
             .possible_value("6a")
             .possible_value("6b")
+            .possible_value("7a")
             .required(true)
         );
    let matches: ArgMatches = command_line_information.get_matches();
@@ -50,6 +53,7 @@ fn main() {
         Some("5a") => start05::start_a(),
         Some("6a") => start06::start_a(),
         Some("6b") => start06::start_b(),
+        Some("7a") => start07::start_a(),
         Some(invalid_input) => eprintln!("'{}' is not a valid solution", invalid_input),
         None => eprintln!("missing arguments")
     }
