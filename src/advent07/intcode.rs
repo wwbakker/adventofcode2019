@@ -2,7 +2,7 @@ use crate::advent07::model::Operation;
 use crate::advent07::model::NextProgramAction;
 
 pub fn exec(code: &mut Vec<i32>,
-            read_int_function: &dyn Fn() -> i32,
+            read_int_function: &mut dyn FnMut() -> i32,
             output_function: &mut dyn FnMut(i32) -> ()) {
     let mut program_counter: i32 = 0;
     let mut next_program_action = NextProgramAction::Continue;
@@ -17,7 +17,7 @@ pub fn exec(code: &mut Vec<i32>,
 
 fn parse_and_execute_single_operation(code: &mut Vec<i32>,
                                       program_counter: i32,
-                                      read_int_function: &dyn Fn() -> i32,
+                                      read_int_function: &mut dyn FnMut() -> i32,
                                       output_function: &mut dyn FnMut(i32) -> ()) -> (NextProgramAction, i32) {
     let operation = Operation::parse_at_program_counter(code, program_counter);
     operation.execute(code, program_counter, read_int_function, output_function)
@@ -33,7 +33,7 @@ mod tests {
     fn test_single_operation() {
         let mut code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
         let expected_result: Vec<i32> = vec!(1, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
-        parse_and_execute_single_operation(&mut code, 0, &empty_test_input_fn, empty_test_output_fn.borrow_mut());
+        parse_and_execute_single_operation(&mut code, 0, &mut empty_test_input_fn, empty_test_output_fn.borrow_mut());
         assert_eq!(&code, &expected_result)
     }
 
@@ -41,7 +41,7 @@ mod tests {
     fn test_complete_execution() {
         let mut code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
         let expected_result: Vec<i32> = vec!(3500, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
-        exec(&mut code, &empty_test_input_fn, empty_test_output_fn.borrow_mut());
+        exec(&mut code, &mut empty_test_input_fn, empty_test_output_fn.borrow_mut());
         assert_eq!(&code, &expected_result)
     }
 
@@ -50,12 +50,12 @@ mod tests {
         let mut code = vec!(3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8);
         {
             let mut output_list = OutputList::create_empty();
-            exec(&mut code, &input_of(7), &mut output_list.create_output_fn());
+            exec(&mut code, &mut input_of(7), &mut output_list.create_output_fn());
             assert_eq!(output_list.pop(), 0);
         }
         {
             let mut output_list = OutputList::create_empty();
-            exec(&mut code, &input_of(8), &mut output_list.create_output_fn());
+            exec(&mut code, &mut input_of(8), &mut output_list.create_output_fn());
             assert_eq!(output_list.pop(), 1);
         }
     }
@@ -64,9 +64,9 @@ mod tests {
     fn test_less_than_position_mode() {
         let mut code = vec!(3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8);
 
-        exec(&mut code, &input_of(7), empty_test_output_fn.borrow_mut());
+        exec(&mut code, &mut input_of(7), empty_test_output_fn.borrow_mut());
         assert_eq!(code[9], 1);
-        exec(&mut code, &input_of(8), empty_test_output_fn.borrow_mut());
+        exec(&mut code, &mut input_of(8), empty_test_output_fn.borrow_mut());
         assert_eq!(code[9], 0);
     }
 
@@ -74,9 +74,9 @@ mod tests {
     fn test_equal_immediate_mode() {
         let mut code = vec!(3, 3, 1108, -1, 8, 3, 4, 3, 99);
 
-        exec(&mut code, &input_of(7), empty_test_output_fn.borrow_mut());
+        exec(&mut code, &mut input_of(7), empty_test_output_fn.borrow_mut());
         assert_eq!(code[3], 0);
-        exec(&mut code, &input_of(8), empty_test_output_fn.borrow_mut());
+        exec(&mut code, &mut input_of(8), empty_test_output_fn.borrow_mut());
         assert_eq!(code[3], 1);
     }
 
@@ -89,7 +89,7 @@ mod tests {
                 test_output = v;
                 ()
             };
-            exec(&mut code, &input_of(0), write_to_test_output_fn.borrow_mut());
+            exec(&mut code, &mut input_of(0), write_to_test_output_fn.borrow_mut());
         }
         assert_eq!(test_output, 0);
         {
@@ -97,7 +97,7 @@ mod tests {
                 test_output = v;
                 ()
             };
-            exec(&mut code, &input_of(-5), write_to_test_output_fn.borrow_mut());
+            exec(&mut code, &mut input_of(-5), write_to_test_output_fn.borrow_mut());
         }
         assert_eq!(test_output, 1);
     }
@@ -111,7 +111,7 @@ mod tests {
                 test_output = v;
                 ()
             };
-            exec(&mut code, &input_of(0), write_to_test_output_fn.borrow_mut());
+            exec(&mut code, &mut input_of(0), write_to_test_output_fn.borrow_mut());
         }
         assert_eq!(test_output, 0);
         {
@@ -120,7 +120,7 @@ mod tests {
                 test_output = v;
                 ()
             };
-            exec(&mut code, &input_of(-5), write_to_test_output_fn.borrow_mut());
+            exec(&mut code, &mut input_of(-5), write_to_test_output_fn.borrow_mut());
         }
         assert_eq!(test_output, 1);
     }

@@ -140,7 +140,7 @@ impl Operation {
     pub(crate) fn execute(&self,
                           code: &mut Vec<i32>,
                           pcu : i32,
-                          read_int_function: &dyn Fn() -> i32,
+                          read_int_function: &mut dyn FnMut() -> i32,
                           output_function: &mut dyn FnMut(i32) -> ()) -> (NextProgramAction, i32) {
         match self {
             Operation::Addition { value_1, value_2, result } => {
