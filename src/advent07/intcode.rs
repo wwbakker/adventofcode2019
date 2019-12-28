@@ -1,5 +1,6 @@
 use crate::advent07::model::{Operation, ProgramState, PossiblyInput};
 
+#[derive(Debug)]
 pub struct IntCode {
     pub code: Vec<i32>,
     pub program_state: ProgramState,

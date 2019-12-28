@@ -45,6 +45,7 @@ pub enum PossiblyInput {
     Unavailable
 }
 
+#[derive(Debug)]
 pub enum ProgramState {
     Ready,
     Halted,

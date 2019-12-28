@@ -25,11 +25,12 @@ pub fn empty_test_output_fn(_: i32) -> () {}
 
 pub fn input_of(i: i32) -> impl Fn() -> PossiblyInput { move || PossiblyInput::Available(i) }
 
+#[derive(Debug)]
 pub struct IoList {
     list: LinkedList<i32>
 }
 
-impl IoList {
+impl<'a> IoList {
 
     pub fn create_empty() -> IoList {
         IoList {
@@ -45,14 +46,18 @@ impl IoList {
         self.list.pop_front().unwrap()
     }
 
-    pub fn create_input_fn(&mut self) -> impl FnMut() -> PossiblyInput + '_ {
-        move || match self.list.pop_front() {
+    pub fn peek(&self) -> Option<&i32> {
+        self.list.back()
+    }
+
+    pub fn create_input_fn(&'a mut self) -> impl FnMut() -> PossiblyInput + 'a {
+        || match self.list.pop_front() {
             Some(v) => PossiblyInput::Available(v),
             None => PossiblyInput::Unavailable
         }
     }
 
-    pub fn create_output_fn(&mut self) -> impl FnMut(i32) -> () + '_ {
-        move |i| self.list.push_back(i)
+    pub fn create_output_fn(&'a mut self) -> impl FnMut(i32) -> () + 'a {
+        |i| self.list.push_back(i)
     }
 }
