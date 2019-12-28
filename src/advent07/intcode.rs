@@ -1,39 +1,69 @@
-use crate::advent07::model::Operation;
-use crate::advent07::model::NextProgramAction;
+use crate::advent07::model::{Operation, NextProgramAction, IoEvent};
 
-pub fn exec(code: &mut Vec<i32>,
-            read_int_function: &mut dyn FnMut() -> i32,
-            output_function: &mut dyn FnMut(i32) -> ()) {
-    let mut program_counter: i32 = 0;
-    let mut next_program_action = NextProgramAction::Continue;
-
-    while let NextProgramAction::Continue = next_program_action {
-        let (npa, next_instruction) =
-            parse_and_execute_single_operation(code, program_counter, read_int_function, output_function);
-        program_counter = next_instruction;
-        next_program_action = npa;
-    }
+pub struct IntCode {
+    code: Vec<i32>,
+    program_counter : i32,
+    next_program_action : NextProgramAction,
+    latest_io_event : Option<IoEvent>
 }
 
-fn parse_and_execute_single_operation(code: &mut Vec<i32>,
-                                      program_counter: i32,
-                                      read_int_function: &mut dyn FnMut() -> i32,
-                                      output_function: &mut dyn FnMut(i32) -> ()) -> (NextProgramAction, i32) {
-    let operation = Operation::parse_at_program_counter(code, program_counter);
-    operation.execute(code, program_counter, read_int_function, output_function)
+impl IntCode {
+
+    pub fn create(code_ref : &Vec<i32>) -> IntCode {
+        IntCode {
+            code: code_ref.clone(),
+            next_program_action: NextProgramAction::Continue { next_instruction: 0 },
+            latest_io_event: Option::None
+        }
+    }
+
+    pub fn exec(&mut self,
+                read_int_function: &mut dyn FnMut() -> i32,
+                output_function: &mut dyn FnMut(i32) -> ()) {
+
+        loop {
+            self.parse_and_execute_single_operation();
+
+            match self.next_program_action {
+                NextProgramAction::Continue { next_instruction} => program_counter = next_instruction,
+                NextProgramAction::Halt => break
+            }
+            match self.latest_io_event {
+                Some(io_event) =>
+                    match io_event {
+                        IoEvent::AwaitingInput { input_destination_address} => code[input_destination_address as usize] = read_int_function(),
+                        IoEvent::Output { value } => output_function(value),
+                    },
+                None => ()
+            }
+        }
+    }
+
+    fn parse_and_execute_single_operation(&mut self) {
+        match self.next_program_action {
+            NextProgramAction::Continue {next_instruction} => {
+                let operation = Operation::parse_at_program_counter(&self.code, self.program_counter);
+                let (npa, ioevent) = operation.execute(code, program_counter);
+                self.next_program_action = npa;
+                self.latest_io_event = ioevent;
+            },
+            _ => panic!("Cannot continue, intcode halted")
+        }
+
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::borrow::BorrowMut;
-    use crate::advent07::intio::{empty_test_input_fn, empty_test_output_fn, input_of, OutputList};
+    use crate::advent07::intio::{empty_test_input_fn, empty_test_output_fn, input_of, IoList};
 
     #[test]
     fn test_single_operation() {
         let mut code = vec!(1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50);
         let expected_result: Vec<i32> = vec!(1, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50);
-        parse_and_execute_single_operation(&mut code, 0, &mut empty_test_input_fn, empty_test_output_fn.borrow_mut());
+        parse_and_execute_single_operation(&mut code, 0);
         assert_eq!(&code, &expected_result)
     }
 
@@ -49,12 +79,12 @@ mod tests {
     fn test_equal_position_mode() {
         let mut code = vec!(3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8);
         {
-            let mut output_list = OutputList::create_empty();
+            let mut output_list = IoList::create_empty();
             exec(&mut code, &mut input_of(7), &mut output_list.create_output_fn());
             assert_eq!(output_list.pop(), 0);
         }
         {
-            let mut output_list = OutputList::create_empty();
+            let mut output_list = IoList::create_empty();
             exec(&mut code, &mut input_of(8), &mut output_list.create_output_fn());
             assert_eq!(output_list.pop(), 1);
         }

@@ -1,9 +1,8 @@
 //use std::io;
 use std::collections::LinkedList;
 
-//not used:
-//pub fn empty_test_input_fn() -> i32 { panic!("input is read, which was not expected") }
-//pub fn empty_test_output_fn(_: i32) -> () {}
+pub fn empty_test_input_fn() -> i32 { panic!("input is read, which was not expected") }
+pub fn empty_test_output_fn(_: i32) -> () {}
 
 //pub fn read_int_from_command_line() -> i32 {
 //    println!("Please input a number.");
@@ -23,42 +22,33 @@ use std::collections::LinkedList;
 //    println!("output: {}", output);
 //}
 
-// not used:
-//pub fn input_of(i: i32) -> impl Fn() -> i32 { move || i }
+pub fn input_of(i: i32) -> impl Fn() -> i32 { move || i }
 
-pub struct InputList {
-    input : LinkedList<i32>
+pub struct IoList {
+    list: LinkedList<i32>
 }
 
-impl InputList {
-    pub fn create_input_fn(&mut self) -> impl FnMut() -> i32 + '_ {
-        move || self.input.pop_front().unwrap()
-    }
+impl IoList {
 
-    pub fn create_empty() -> InputList {
-        InputList {
-            input: LinkedList::new()
+    pub fn create_empty() -> IoList {
+        IoList {
+            list: LinkedList::new()
         }
     }
 
     pub fn push(&mut self, v : i32) {
-        self.input.push_back(v);
+        self.list.push_back(v);
     }
-}
 
-pub struct OutputList {
-    output : LinkedList<i32>
-}
-impl OutputList {
-    pub fn create_output_fn(&mut self) -> impl FnMut(i32) -> () + '_ {
-        move |i| self.output.push_back(i)
-    }
-    pub fn create_empty() -> OutputList {
-        OutputList {
-            output: LinkedList::new()
-        }
-    }
     pub fn pop(&mut self) -> i32 {
-        self.output.pop_front().unwrap()
+        self.list.pop_front().unwrap()
+    }
+
+    pub fn create_input_fn(&mut self) -> impl FnMut() -> i32 + '_ {
+        move || self.list.pop_front().unwrap()
+    }
+
+    pub fn create_output_fn(&mut self) -> impl FnMut(i32) -> () + '_ {
+        move |i| self.list.push_back(i)
     }
 }
