@@ -39,16 +39,22 @@ impl Value {
         }
     }
 }
-pub(crate) enum NextProgramAction {
-    Continue { next_instruction: i32 },
-    Halt,
+
+pub enum PossiblyInput {
+    Available(i32),
+    Unavailable
 }
 
+pub enum ProgramState {
+    Ready,
+    Halted,
+    AwaitingInput
+}
 
 pub(crate) enum Operation {
     Addition { value_1 : Value, value_2: Value, result: Value },
     Multiplication { value_1: Value, value_2: Value, result: Value },
-    Input { destination : i32 },
+    Input { destination : Value },
     Output { source : Value },
     JumpIfTrue { value : Value, jump_address: Value },
     JumpIfFalse { value : Value, jump_address: Value },
@@ -93,6 +99,8 @@ impl Operation {
         (opcode, parameter_modes)
     }
 
+
+
     pub(crate) fn parse_at_program_counter(code: &Vec<i32>, program_counter: i32) -> Operation {
         let pcu: usize = program_counter as usize;
         let (opcode, parameter_modes) = Self::parse_opcode_and_parameter_modes(code[pcu]);
@@ -108,7 +116,7 @@ impl Operation {
                 result: Value::create(code[pcu + 3], &parameter_modes[2]),
             },
             3 => Operation::Input {
-                destination: code[pcu + 1]
+                destination: Value::create( code[pcu + 1], &parameter_modes[0])
             },
             4 => Operation::Output {
                 source: Value::create( code[pcu + 1], &parameter_modes[0])
@@ -138,29 +146,38 @@ impl Operation {
 
     pub(crate) fn execute(&self,
                           code: &mut Vec<i32>,
-                          pcu : i32) -> (NextProgramAction, Option<IoEvent>) {
+                          pcu : i32,
+                          read_int_function: &mut dyn FnMut() -> PossiblyInput,
+                          output_function: &mut dyn FnMut(i32) -> ()) -> (ProgramState, i32) {
         match self {
             Operation::Addition { value_1, value_2, result } => {
                 result.write(code, value_1.read(code) + value_2.read(code));
-                (NextProgramAction::Continue { next_instruction: pcu + 4}, Option::None)
+                (ProgramState::Ready, pcu + 4)
             },
             Operation::Multiplication { value_1, value_2, result } => {
                 result.write(code, value_1.read(code) * value_2.read(code));
-                (NextProgramAction::Continue { next_instruction: pcu + 4}, Option::None)
+                (ProgramState::Ready, pcu + 4)
             },
             Operation::Input { destination} => {
-                (NextProgramAction::Continue { next_instruction: pcu + 2}, Option::Some(IoEvent::AwaitingInput { input_destination_address: *destination }) )
+                match read_int_function() {
+                    PossiblyInput::Available(input) => {
+                        destination.write(code, input);
+                        (ProgramState::Ready, pcu + 2)
+                    },
+                    PossiblyInput::Unavailable => (ProgramState::AwaitingInput, pcu)
+                }
             },
             Operation::Output { source} => {
-                (NextProgramAction::Continue { next_instruction: pcu + 2}, Option::Some(IoEvent::Output { value: source.read(code) }))
+                output_function(source.read(code));
+                (ProgramState::Ready, pcu + 2)
             },
             Operation::JumpIfTrue { value, jump_address} => {
                 let next_instruction : i32 =
                     if value.read(code) != 0
-                        { jump_address.read(code) }
+                    { jump_address.read(code) }
                     else
-                        { pcu + 3 };
-                (NextProgramAction::Continue { next_instruction }, Option::None)
+                    { pcu + 3 };
+                (ProgramState::Ready, next_instruction)
             },
             Operation::JumpIfFalse { value, jump_address} => {
                 let next_instruction : i32 =
@@ -168,17 +185,17 @@ impl Operation {
                     { jump_address.read(code) }
                     else
                     { pcu + 3 };
-                (NextProgramAction::Continue { next_instruction }, Option::None)
+                (ProgramState::Ready, next_instruction)
             },
             Operation::LessThan { value_1, value_2, result} => {
                 result.write(code, if value_1.read(code) < value_2.read(code) {1} else {0} );
-                (NextProgramAction::Continue { next_instruction: pcu + 4}, Option::None)
+                (ProgramState::Ready, pcu + 4)
             }
             Operation::Equals { value_1, value_2, result} => {
                 result.write(code, if value_1.read(code) == value_2.read(code) {1} else {0} );
-                (NextProgramAction::Continue { next_instruction: pcu + 4}, Option::None)
+                (ProgramState::Ready, pcu + 4)
             }
-            Operation::Halt => (NextProgramAction::Halt, Option::None)
+            Operation::Halt => (ProgramState::Halted, pcu)
         }
     }
 }
