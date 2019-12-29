@@ -21,14 +21,8 @@ impl<'a> Amplifier {
         }
     }
     fn exec(&mut self, next_amplifier: &mut Amplifier) {
-        println!("input_list: {:#?}", self.input_list);
-        println!("intcode, before_exec: {:#?}", self.intcode);
-
         self.intcode.exec(&mut self.input_list,
                           &mut next_amplifier.input_list);
-        println!("intcode, after_exec: {:#?}", self.intcode);
-
-//        println!("{:?}", self.intcode.program_state)
     }
     fn is_halted(&self) -> bool {
         match self.intcode.program_state {
@@ -46,15 +40,10 @@ pub fn execute_amplifiers_looped(code: &Vec<i32>, phase_settings: Vec<i32>) -> i
     let mut amp_e = Amplifier::create(IntCode::create(code), phase_settings[4]);
     amp_a.input_list.push(0);
     while !amp_a.is_halted() {
-        println!("amp_a");
         amp_a.exec(&mut amp_b);
-        println!("amp_b");
         amp_b.exec(&mut amp_c);
-        println!("amp_c");
         amp_c.exec(&mut amp_d);
-        println!("amp_d");
         amp_d.exec(&mut amp_e);
-        println!("amp_e");
         amp_e.exec(&mut amp_a);
     }
     amp_a.input_list.pop()
@@ -99,6 +88,26 @@ pub fn highest_signal(code: &Vec<i32>) -> i32 {
     current_highest_signal
 }
 
+pub fn highest_signal_looped(code: &Vec<i32>) -> i32 {
+    let mut current_highest_signal = -1;
+    for a in 5..10 {
+        for b in 5..10 {
+            for c in 5..10 {
+                for d in 5..10 {
+                    for e in 5..10 {
+                        if unique(a, b, c, d, e) {
+                            current_highest_signal =
+                                max(current_highest_signal,
+                                    execute_amplifiers_looped(code, vec!(a, b, c, d, e)));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    current_highest_signal
+}
+
 fn unique(a: i32, b: i32, c: i32, d: i32, e: i32) -> bool {
     let mut h: HashSet<i32> = HashSet::new();
     h.insert(a);
@@ -128,13 +137,29 @@ mod tests {
         assert_eq!(highest_signal(&code), 65210)
     }
 
-//    #[test]
-//    fn test_execute_amplifiers_looped() {
-//        let code =
-//            vec!(3, 26, 1001, 26, -4, 26, 3, 27, 1002, 27, 2, 27, 1, 27, 26,
-//                 27, 4, 27, 1001, 28, -1, 28, 1005, 28, 6, 99, 0, 0, 5);
-//
-//        assert_eq!(execute_amplifiers_looped(&code, vec!(9, 8, 7, 6, 5)), 139629729);
-//
-//    }
+    #[test]
+    fn test_execute_amplifiers_looped() {
+        let code =
+            vec!(3, 26, 1001, 26, -4, 26, 3, 27, 1002, 27, 2, 27, 1, 27, 26,
+                 27, 4, 27, 1001, 28, -1, 28, 1005, 28, 6, 99, 0, 0, 5);
+
+        assert_eq!(execute_amplifiers_looped(&code, vec!(9, 8, 7, 6, 5)), 139629729);
+    }
+
+    #[test]
+    fn test_highest_signal_looped() {
+        let code =
+            vec!(3, 26, 1001, 26, -4, 26, 3, 27, 1002, 27, 2, 27, 1, 27, 26,
+                 27, 4, 27, 1001, 28, -1, 28, 1005, 28, 6, 99, 0, 0, 5);
+        assert_eq!(highest_signal_looped(&code), 139629729)
+    }
+
+    #[test]
+    fn test_highest_signal_looped_2() {
+        let code =
+            vec!(3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,
+                 -5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,
+                 53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10);
+        assert_eq!(highest_signal_looped(&code), 18216)
+    }
 }

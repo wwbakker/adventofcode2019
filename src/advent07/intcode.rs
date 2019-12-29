@@ -1,4 +1,4 @@
-use crate::advent07::model::{Operation, ProgramState, PossiblyInput};
+use crate::advent07::model::{Operation, ProgramState};
 use crate::advent07::intio::{InputMethod, OutputMethod};
 
 #[derive(Debug)]
@@ -43,8 +43,9 @@ impl IntCode {
         }
 
         loop {
+            self.parse_and_execute_single_operation(read_int_function, output_function);
             match self.program_state {
-                ProgramState::Ready => self.parse_and_execute_single_operation(read_int_function, output_function),
+                ProgramState::Ready => (),
                 _ => break
             }
         }
