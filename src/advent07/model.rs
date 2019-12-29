@@ -1,3 +1,5 @@
+use crate::advent07::intio::{InputMethod, OutputMethod};
+
 #[derive(PartialEq,Debug,Clone)]
 pub(crate) enum ParameterMode {
     Immediate,
@@ -148,8 +150,8 @@ impl Operation {
     pub(crate) fn execute(&self,
                           code: &mut Vec<i32>,
                           pcu : i32,
-                          read_int_function: &mut dyn FnMut() -> PossiblyInput,
-                          output_function: &mut dyn FnMut(i32) -> ()) -> (ProgramState, i32) {
+                          input_method: &mut dyn InputMethod,
+                          output_method: &mut dyn OutputMethod) -> (ProgramState, i32) {
         match self {
             Operation::Addition { value_1, value_2, result } => {
                 result.write(code, value_1.read(code) + value_2.read(code));
@@ -160,7 +162,7 @@ impl Operation {
                 (ProgramState::Ready, pcu + 4)
             },
             Operation::Input { destination} => {
-                match read_int_function() {
+                match input_method.read() {
                     PossiblyInput::Available(input) => {
                         destination.write(code, input);
                         (ProgramState::Ready, pcu + 2)
@@ -169,7 +171,7 @@ impl Operation {
                 }
             },
             Operation::Output { source} => {
-                output_function(source.read(code));
+                output_method.write(source.read(code));
                 (ProgramState::Ready, pcu + 2)
             },
             Operation::JumpIfTrue { value, jump_address} => {
